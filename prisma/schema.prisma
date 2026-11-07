@@ -41,3 +41,12 @@ model Message {
   @@index([ip, createdAt])
   @@map("messages")
 }
+
+/** Simple key/value store for site-wide settings (banner video, etc.). */
+model SiteSetting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}

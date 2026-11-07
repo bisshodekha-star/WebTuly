@@ -178,6 +178,17 @@ export interface SiteContent {
     new_tag: string
     acct_notice: string
     delete_fail: string
+    banner_title: string
+    banner_sub: string
+    banner_ph: string
+    banner_hint: string
+    banner_save: string
+    banner_saving: string
+    banner_saved: string
+    banner_fail: string
+    banner_clear: string
+    banner_none: string
+    banner_current: string
   }
 
   api: {

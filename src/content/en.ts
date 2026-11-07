@@ -231,6 +231,18 @@ export const en: SiteContent = {
     new_tag: 'new',
     acct_notice: 'Messages from signed-up users are linked to their accounts.',
     delete_fail: 'Could not delete — please try again.',
+    banner_title: '🎬 Banner Video',
+    banner_sub: 'The video banner shown at the very top of the homepage',
+    banner_ph: 'Paste a video link (YouTube or direct .mp4)',
+    banner_hint:
+      'Aspect ratio: 1200×500px. Accepts YouTube links, Vimeo links or direct .mp4/.webm files. To remove the banner, clear the field and save.',
+    banner_save: 'Save',
+    banner_saving: 'Saving…',
+    banner_saved: '✓ Saved — visible on the homepage',
+    banner_fail: 'Could not save — please try again.',
+    banner_clear: 'Remove banner',
+    banner_none: 'No banner video is set yet.',
+    banner_current: 'Current link:',
   },
 
   api: {

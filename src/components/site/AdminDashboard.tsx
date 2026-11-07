@@ -20,6 +20,103 @@ interface Counts {
   week: number
 }
 
+/* ================= BANNER VIDEO SETTING (→ /api/admin/banner) ================= */
+function BannerCard() {
+  const { t } = useLang()
+  const [url, setUrl] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [status, setStatus] = useState<{ kind: 'ok' | 'fail' | ''; msg: string }>({ kind: '', msg: '' })
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    let on = true
+    fetch('/api/admin/banner')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (on && d?.ok) setUrl(d.videoUrl || '')
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (on) setLoaded(true)
+      })
+    return () => {
+      on = false
+    }
+  }, [])
+
+  const save = async (clear = false) => {
+    setBusy(true)
+    setStatus({ kind: '', msg: '' })
+    try {
+      const res = await fetch('/api/admin/banner', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoUrl: clear ? '' : url.trim() }),
+      })
+      if (res.status === 401) {
+        window.location.href = '/admin/login'
+        return
+      }
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.ok) {
+        setUrl(data.videoUrl || '')
+        setStatus({ kind: 'ok', msg: t.admin.banner_saved })
+      } else {
+        setStatus({ kind: 'fail', msg: t.admin.banner_fail })
+      }
+    } catch {
+      setStatus({ kind: 'fail', msg: t.admin.banner_fail })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="banner-card">
+      <h2>{t.admin.banner_title}</h2>
+      <p className="bsub">{t.admin.banner_sub}</p>
+      <div className="brow">
+        <input
+          type="url"
+          value={url}
+          onChange={(e) => {
+            setUrl(e.target.value)
+            setStatus({ kind: '', msg: '' })
+          }}
+          placeholder={t.admin.banner_ph}
+          maxLength={2000}
+          aria-label={t.admin.banner_title}
+        />
+        <button className="bbtn" onClick={() => save(false)} disabled={busy}>
+          {busy ? t.admin.banner_saving : t.admin.banner_save}
+        </button>
+        {url.trim() !== '' && (
+          <button className="bbtn bghost" onClick={() => save(true)} disabled={busy}>
+            {t.admin.banner_clear}
+          </button>
+        )}
+      </div>
+      <p className="bhint">{t.admin.banner_hint}</p>
+      {status.kind === 'ok' && <p className="bstat">{status.msg}</p>}
+      {status.kind === 'fail' && <p className="bstat fail">{status.msg}</p>}
+      {loaded && status.kind === '' && (
+        <p className="bstat" style={{ color: 'var(--text-muted)' }}>
+          {url
+            ? (
+              <>
+                {t.admin.banner_current}{' '}
+                <a href={url} target="_blank" rel="noreferrer">
+                  {url.length > 60 ? `${url.slice(0, 60)}…` : url}
+                </a>
+              </>
+            )
+            : t.admin.banner_none}
+        </p>
+      )}
+    </div>
+  )
+}
+
 function Dashboard({ adminName }: { adminName: string }) {
   const { t, lang, dig } = useLang()
   const [messages, setMessages] = useState<Msg[]>([])
@@ -155,6 +252,8 @@ function Dashboard({ adminName }: { adminName: string }) {
             </div>
           ))}
         </div>
+
+        <BannerCard />
 
         <div className="toolbar">
           <div className="seg">

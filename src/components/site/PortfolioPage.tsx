@@ -1,8 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { LangProvider, useLang } from '@/content'
-import ParticlesCanvas from './ParticlesCanvas'
 import TypedText from './TypedText'
 import StatCounter from './StatCounter'
 import SkillBar from './SkillBar'
@@ -102,88 +101,7 @@ function Portfolio() {
     return () => io.disconnect()
   }, [])
 
-  /* ---------- 3D tilt cards (desktop only) ---------- */
-  useEffect(() => {
-    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (!canHover || reduce) return
 
-    const cards = Array.from(document.querySelectorAll<HTMLElement>('.tilt'))
-    const cleanups: (() => void)[] = []
-
-    cards.forEach((card) => {
-      const glare = card.querySelector<HTMLElement>('.tilt-glare')
-      const maxTilt = 9
-      const onMove = (e: MouseEvent) => {
-        const r = card.getBoundingClientRect()
-        const px = (e.clientX - r.left) / r.width
-        const py = (e.clientY - r.top) / r.height
-        const rx = (0.5 - py) * maxTilt
-        const ry = (px - 0.5) * maxTilt
-        card.style.transform = `perspective(820px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px) scale(1.015)`
-        glare?.style.setProperty('--gx', `${px * 100}%`)
-        glare?.style.setProperty('--gy', `${py * 100}%`)
-      }
-      const onLeave = () => {
-        card.style.transform = ''
-      }
-      card.addEventListener('mousemove', onMove)
-      card.addEventListener('mouseleave', onLeave)
-      cleanups.push(() => {
-        card.removeEventListener('mousemove', onMove)
-        card.removeEventListener('mouseleave', onLeave)
-      })
-    })
-    return () => cleanups.forEach((fn) => fn())
-  }, [])
-
-  /* ---------- Hero parallax (code card + cube + orbs) ---------- */
-  const heroRef = useRef<HTMLElement>(null)
-  const codeCardRef = useRef<HTMLDivElement>(null)
-  const cubeWrapRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const hero = heroRef.current
-    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (!hero || !canHover || reduce) return
-
-    const orbs = Array.from(hero.querySelectorAll<HTMLElement>('.orb'))
-    const onMove = (e: MouseEvent) => {
-      const r = hero.getBoundingClientRect()
-      const nx = (e.clientX - r.left) / r.width - 0.5
-      const ny = (e.clientY - r.top) / r.height - 0.5
-      if (codeCardRef.current) {
-        codeCardRef.current.style.animation = 'none'
-        codeCardRef.current.style.transform = `rotateY(${nx * 9}deg) rotateX(${-ny * 7}deg) translateY(-6px)`
-      }
-      if (cubeWrapRef.current) {
-        cubeWrapRef.current.style.transform = `translate(${nx * 26}px, ${ny * 20 - 8}px)`
-      }
-      orbs.forEach((o, i) => {
-        const f = (i + 1) * 14
-        o.style.marginLeft = `${nx * f}px`
-        o.style.marginTop = `${ny * f}px`
-      })
-    }
-    const onLeave = () => {
-      if (codeCardRef.current) {
-        codeCardRef.current.style.transform = ''
-        codeCardRef.current.style.animation = ''
-      }
-      if (cubeWrapRef.current) cubeWrapRef.current.style.transform = ''
-      orbs.forEach((o) => {
-        o.style.marginLeft = ''
-        o.style.marginTop = ''
-      })
-    }
-    hero.addEventListener('mousemove', onMove)
-    hero.addEventListener('mouseleave', onLeave)
-    return () => {
-      hero.removeEventListener('mousemove', onMove)
-      hero.removeEventListener('mouseleave', onLeave)
-    }
-  }, [])
 
   const navItems: [string, string][] = [
     ['home', t.nav.home],
@@ -200,8 +118,8 @@ function Portfolio() {
       <title>{t.meta_title}</title>
       <meta name="description" content={t.meta_desc} />
 
-      <ParticlesCanvas />
-      <div className="bg-grid" aria-hidden="true" />
+      {/* ================= BANNER VIDEO (admin-managed) ================= */}
+      <VideoBanner />
 
       {/* ================= NAVBAR ================= */}
       <header className={`navbar${scrolled ? ' scrolled' : ''}`}>
@@ -307,7 +225,7 @@ function Portfolio() {
       </header>
 
       {/* ================= HERO ================= */}
-      <section className="hero" id="home" ref={heroRef}>
+      <section className="hero" id="home">
         <div className="container hero-grid">
           <div>
             <span className="hero-badge">{t.hero.badge}</span>
@@ -344,20 +262,7 @@ function Portfolio() {
           </div>
 
           <div className="hero-3d">
-            <div className="orb o1" aria-hidden="true"></div>
-            <div className="orb o2" aria-hidden="true"></div>
-            <div className="orb o3" aria-hidden="true"></div>
-            <div className="cube-wrap" ref={cubeWrapRef} aria-hidden="true">
-              <div className="cube">
-                <span className="face f-front"></span>
-                <span className="face f-back"></span>
-                <span className="face f-right"></span>
-                <span className="face f-left"></span>
-                <span className="face f-top"></span>
-                <span className="face f-bottom"></span>
-              </div>
-            </div>
-            <div className="code-card" ref={codeCardRef}>
+            <div className="code-card">
               <div className="bar">
                 <i></i>
                 <i></i>
@@ -481,8 +386,7 @@ function Portfolio() {
 
           <div className="services-grid">
             {t.services.items.map(([ico, title, desc]) => (
-              <div className="service reveal tilt" key={title}>
-                <span className="tilt-glare" aria-hidden="true" />
+              <div className="service reveal" key={title}>
                 <div className="ico">{ico}</div>
                 <h3>{title}</h3>
                 <p>{desc}</p>
@@ -517,11 +421,10 @@ function Portfolio() {
           <div className="projects-grid">
             {t.projects.items.map(([cat, thumb, abbr, catLabel, title, desc, stack]) => (
               <article
-                className={`project reveal tilt${filter !== 'all' && filter !== cat ? ' hidden' : ''}`}
+                className={`project reveal${filter !== 'all' && filter !== cat ? ' hidden' : ''}`}
                 data-cat={cat}
                 key={title}
               >
-                <span className="tilt-glare" aria-hidden="true" />
                 <div className={`thumb ${thumb}`}>{abbr}</div>
                 <div className="body">
                   <span className="cat">{catLabel}</span>
@@ -774,6 +677,73 @@ function ContactSection() {
               {sending ? t.contact.btn_sending : t.contact.btn_send}
             </button>
           </form>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ================= VIDEO BANNER (admin-managed, 1200×500) ================= */
+
+/** Extract the video id from any common YouTube link shape, or null. */
+function youtubeId(url: string): string | null {
+  const m = url.match(
+    /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{6,20})/
+  )
+  return m ? m[1] : null
+}
+
+/** Extract the video id from a Vimeo link, or null. */
+function vimeoId(url: string): string | null {
+  const m = url.match(/vimeo\.com\/(?:video\/)?(\d{6,12})/)
+  return m ? m[1] : null
+}
+
+function VideoBanner() {
+  const [url, setUrl] = useState('')
+
+  useEffect(() => {
+    let on = true
+    fetch('/api/banner')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (on && d?.ok && d.videoUrl) setUrl(d.videoUrl)
+      })
+      .catch(() => {})
+    return () => {
+      on = false
+    }
+  }, [])
+
+  if (!url) return null
+
+  const yt = youtubeId(url)
+  const vm = vimeoId(url)
+
+  return (
+    <section className="video-banner-wrap" aria-label="ব্যানার ভিডিও">
+      <div className="container">
+        <div className="video-banner">
+          {yt ? (
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&mute=1&loop=1&playlist=${yt}&controls=1&rel=0&modestbranding=1&playsinline=1`}
+              title="Banner video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              loading="lazy"
+            />
+          ) : vm ? (
+            <iframe
+              src={`https://player.vimeo.com/video/${vm}?autoplay=1&muted=1&loop=1&background=1`}
+              title="Banner video"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              loading="lazy"
+            />
+          ) : (
+            /* direct video file (mp4 / webm) — muted autoplay loops like a banner */
+            <video src={url} autoPlay muted loop playsInline preload="metadata" />
+          )}
         </div>
       </div>
     </section>
