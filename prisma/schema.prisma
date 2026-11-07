@@ -1,0 +1,43 @@
+// WebTuly — Prisma schema
+// Local dev: PostgreSQL (sandbox). Production: Neon PostgreSQL (Vercel).
+// Same schema works for both — only DATABASE_URL changes.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         String    @default("USER") // USER | ADMIN
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  messages     Message[]
+
+  @@map("users")
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String   @default("")
+  body      String   @db.Text
+  ip        String   @default("")
+  isRead    Boolean  @default(false) @map("is_read")
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([isRead])
+  @@index([ip, createdAt])
+  @@map("messages")
+}
